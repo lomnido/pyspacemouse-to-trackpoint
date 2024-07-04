@@ -1113,6 +1113,8 @@ if __name__ == "__main__":
     pressed_btn_right = 0
     coll_w_up = 0  # collected wheel up
     coll_w_down = 0  # collected wheel down
+    hit_w_up = False  # marker when scrolling up
+    hit_w_down = False  # marker when scrolling down
     last_w_up = 0  # keep last value (cleaned) for wheel up
     last_w_down = 0  # keep last value (cleand) for wheel down
 
@@ -1123,39 +1125,7 @@ if __name__ == "__main__":
         state = dev.read()
 
         if state and state != state_0:
-    
-            # moving on X-axis
-            this_x = state.x
-            if this_x != 0:
-                cur_x = int(round(this_x * max * sens))
-                device.emit(uinput.REL_X, cur_x)
 
-            # moving on Y-axis
-            this_y = - state.y
-            if this_y != 0:
-                cur_y = int(round(this_y * max * sens))
-                device.emit(uinput.REL_Y, cur_y)
-
-            # buttons
-            if state.buttons:
-                btns = state.buttons
-
-                # LEFT button
-                if btns[0] == 1 and pressed_btn_left == 0:  # LEFT = on
-                    device.emit(uinput.BTN_LEFT, 1)
-                    pressed_btn_left = 1
-                if btns[0] == 0 and pressed_btn_left == 1:  # LEFT = off
-                    device.emit(uinput.BTN_LEFT, 0)
-                    pressed_btn_left = 0
-                
-                # RIGHT button
-                if btns[1] == 1:  # RIGHT = on
-                    device.emit(uinput.BTN_RIGHT, 1)
-                    pressed_btn_right = 1
-                if btns[1] == 0 and pressed_btn_right == 1:  # RIGHT = off
-                    device.emit(uinput.BTN_RIGHT, 0)
-                    pressed_btn_right = 0
-                
             # yaw (to translate to scrolling)
             this_yaw = state.yaw
             if this_yaw > 0:
@@ -1169,6 +1139,7 @@ if __name__ == "__main__":
 
                 if coll_w_up >= 5:
                     device.emit(uinput.REL_WHEEL, -1)
+                    hit_w_up = True
                     coll_w_up -= 5
             if this_yaw < 0:
                 this_w_down = int(round( - this_yaw * max_wheel * sens))
@@ -1181,7 +1152,46 @@ if __name__ == "__main__":
 
                 if coll_w_down >= 5:
                     device.emit(uinput.REL_WHEEL, 1)
+                    hit_w_down = True
                     coll_w_down -= 5
+            if this_yaw == 0:
+                hit_w_down = False
+                hit_w_up = False
+
+            # translate X,Y axis only when is it not scrolling
+            if hit_w_down is False and hit_w_up is False:
+
+                # moving on X-axis
+                this_x = state.x
+                if this_x != 0:
+                    cur_x = int(round(this_x * max * sens))
+                    device.emit(uinput.REL_X, cur_x)
+
+                # moving on Y-axis
+                this_y = - state.y
+                if this_y != 0:
+                    cur_y = int(round(this_y * max * sens))
+                    device.emit(uinput.REL_Y, cur_y)
+
+                # buttons
+                if state.buttons:
+                    btns = state.buttons
+
+                    # LEFT button
+                    if btns[0] == 1 and pressed_btn_left == 0:  # LEFT = on
+                        device.emit(uinput.BTN_LEFT, 1)
+                        pressed_btn_left = 1
+                    if btns[0] == 0 and pressed_btn_left == 1:  # LEFT = off
+                        device.emit(uinput.BTN_LEFT, 0)
+                        pressed_btn_left = 0
+
+                    # RIGHT button
+                    if btns[1] == 1:  # RIGHT = on
+                        device.emit(uinput.BTN_RIGHT, 1)
+                        pressed_btn_right = 1
+                    if btns[1] == 0 and pressed_btn_right == 1:  # RIGHT = off
+                        device.emit(uinput.BTN_RIGHT, 0)
+                        pressed_btn_right = 0
  
             # clear
             state_0 = state
