@@ -12,6 +12,10 @@ Huge Thanks to [Kuba Andrýsek](https://github.com/JakubAndrysek) for the code r
 * move cursor around: Up, Down, Left, Right
 * left and right clicks
 * scroll up/down by using yaw (angle on the XY plane)
+* zoom-in/zoom-out by using z-axis (emulating CTRL + '+'|'-')
+        + sesitivity can be changed 'zoom\_sens' variable; greater the number = greater force required
+* horizontal scroll (left/right) by pushing (negative z-axis) and then move on x-axis will corespond to movement
+        + sensitivity can be changed by 'hs\_sens' variable; greater the number = more movement per 1 scroll point is required
 
 ## What does NOT work:
 

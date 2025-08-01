@@ -1098,6 +1098,7 @@ if __name__ == "__main__":
 
     events = (
         uinput.REL_X, uinput.REL_Y, uinput.BTN_LEFT, uinput.BTN_RIGHT, uinput.REL_WHEEL,
+        uinput.KEY_LEFTCTRL, uinput.KEY_KPPLUS, uinput.KEY_KPMINUS, uinput.REL_HWHEEL,
     )
     device = uinput.Device(events, name='spacenav-pyevdev')
 
@@ -1109,6 +1110,8 @@ if __name__ == "__main__":
     # sens = 0.08
     sens = 0.12
     cur_x = 0
+    cur_y = 0
+    cur_z = 0
     pressed_btn_left = 0
     pressed_btn_right = 0
     coll_w_up = 0  # collected wheel up
@@ -1117,6 +1120,12 @@ if __name__ == "__main__":
     hit_w_down = False  # marker when scrolling down
     last_w_up = 0  # keep last value (cleaned) for wheel up
     last_w_down = 0  # keep last value (cleand) for wheel down
+    hit_zoom_in: bool = False
+    is_zoom_in: bool = True  # if action leads to ZOOM-IN
+    is_h_scroll: int = 0  # if True, than ignore x-movement; 0=nothing;1=getting_ready;2=on_it
+    hs_sens: float = 27.3  # sesitivity of how much x-movement to represent 1 horizontal scroll step
+    hit_zoom_out: bool = False
+    zoom_sens: float = 0.38  # zoom sensitivity - how much z-axis movement is needed for 1 zoom action
 
     while True:
         # not to put load on CPU
@@ -1165,13 +1174,48 @@ if __name__ == "__main__":
                 this_x = state.x
                 if this_x != 0:
                     cur_x = int(round(this_x * max * sens))
-                    device.emit(uinput.REL_X, cur_x)
+                    if is_h_scroll == 0:
+                        device.emit(uinput.REL_X, cur_x)
+                    else:
+                        if cur_x > hs_sens:
+                            device.emit(uinput.REL_HWHEEL, 1)
+                            is_h_scroll = 2
+                        elif cur_x < - hs_sens:
+                            device.emit(uinput.REL_HWHEEL, -1)
+                            is_h_scroll = 2
 
                 # moving on Y-axis
                 this_y = - state.y
                 if this_y != 0:
                     cur_y = int(round(this_y * max * sens))
                     device.emit(uinput.REL_Y, cur_y)
+
+                # handle pushing down (Z-axis) (one-time action)
+                this_z = state.z
+                if this_z < - zoom_sens and hit_zoom_in is False:
+                    hit_zoom_in = True
+                    if is_h_scroll == 0 and pressed_btn_left == 0:
+                        is_h_scroll = 1
+
+                elif this_z > - (zoom_sens / 2) and hit_zoom_in is True:
+                    # only zoom-in if no previous horizontal scroll
+                    if is_zoom_in is True and is_h_scroll < 2:
+                        device.emit(uinput.KEY_LEFTCTRL, 1)
+                        device.emit(uinput.KEY_KPPLUS, 1)
+                        device.emit(uinput.KEY_KPPLUS, 0)
+                        device.emit(uinput.KEY_LEFTCTRL, 0)
+                    hit_zoom_in = False
+                    is_h_scroll = 0
+
+                # handle pulling up (Z-axis) (one-time action)
+                if this_z > zoom_sens and hit_zoom_out is False:
+                    hit_zoom_out = True
+                    device.emit(uinput.KEY_LEFTCTRL, 1)
+                    device.emit(uinput.KEY_KPMINUS, 1)
+                    device.emit(uinput.KEY_KPMINUS, 0)
+                    device.emit(uinput.KEY_LEFTCTRL, 0)
+                elif this_z < (zoom_sens / 2) and hit_zoom_out is True:
+                    hit_zoom_out = False
 
                 # buttons
                 if state.buttons:
