@@ -1125,7 +1125,7 @@ if __name__ == "__main__":
     is_h_scroll: int = 0  # if True, than ignore x-movement; 0=nothing;1=getting_ready;2=on_it
     hs_sens: float = 27.3  # sesitivity of how much x-movement to represent 1 horizontal scroll step
     hit_zoom_out: bool = False
-    zoom_sens: float = 0.38  # zoom sensitivity - how much z-axis movement is needed for 1 zoom action
+    zoom_sens: float = 0.53  # zoom sensitivity
 
     while True:
         # not to put load on CPU
@@ -1192,9 +1192,9 @@ if __name__ == "__main__":
 
                 # handle pushing down (Z-axis) (one-time action)
                 this_z = state.z
-                if this_z < - zoom_sens and hit_zoom_in is False:
+                if this_z < - zoom_sens and hit_zoom_in is False and pressed_btn_left == 0:
                     hit_zoom_in = True
-                    if is_h_scroll == 0 and pressed_btn_left == 0:
+                    if is_h_scroll == 0:
                         is_h_scroll = 1
 
                 elif this_z > - (zoom_sens / 2) and hit_zoom_in is True:
