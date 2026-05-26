@@ -22,32 +22,34 @@ Huge Thanks to [Kuba Andrýsek](https://github.com/JakubAndrysek) for the code r
 * script is ad-hoc, no permanent system integration thus far
 * sensitivity can only be changed by values from inside the script
 
-## How to run:
+## Run inside virtual environment
 
-### Python dependencies
+you should swich to 'root' and then:
 
-These dependenies are usually not installed:
-* python3-evdev
-* python3-uinput
+```shell
 
-### 1st: test if you find your connected device
+# make sure you have these
+apt install python3-dev
+apt install python3-uinput
+apt install python3-evdev
+apt install python3-venv
 
-You can use:
+# create and load virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-```
-evdev-joystick --list
-```
-To see if your device can be found and ready to use.
+# install dependencies inside virtual environment
+pip install python-uinput
+pip install easyhid
+pip install evdev
 
-### 2nd: ad-hoc run
+# make sure kernel module is loaded
+modprobe uinput
 
-You have to run it as root like:
-
-```
+# now python script should work if you have the device connected
 python3 pyspacemouse.py
-```
 
-To stop just stop the script.
+```
 
 ## Nones
 
